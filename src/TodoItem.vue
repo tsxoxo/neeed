@@ -24,19 +24,22 @@ const props = defineProps<{
 }>();
 
 const { state, send } = useActor(props.todoRef);
+console.log(JSON.stringify(state.value));
+
 const inputRef = ref(null);
 
-watch(
-  () => state.value.actions,
-  async (actions) => {
-    if (actions.find((action) => action.type === 'focusInput')) {
-      if (inputRef.value) {
-        await nextTick();
-        inputRef.value.select();
-      }
-    }
-  }
-);
+// not sure what this does
+// watch(
+//   () => state.value.actions,
+//   async (actions) => {
+//     if (actions.find((action) => action.type === 'focusInput')) {
+//       if (inputRef.value) {
+//         await nextTick();
+//         inputRef.value.select();
+//       }
+//     }
+//   }
+// );
 
 const title = computed(() => state.value.context.title);
 const completed = computed(() => state.value.context.completed);

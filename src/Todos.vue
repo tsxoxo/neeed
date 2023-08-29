@@ -50,6 +50,8 @@ import TodoItem from "./TodoItem.vue";
 import { todosMachine } from "./todos.machine";
 import { useMachine } from "@xstate/vue";
 import { computed } from "vue";
+import type { Todo } from "./types";
+import type { Ref } from 'vue'
 
 import { useHashChange } from "./useHashChange";
 
@@ -57,7 +59,7 @@ inspect({
   iframe: false,
 });
 
-function filterTodos(filter, todos) {
+function filterTodos(filter: string, todos: Todo[]) {
   if (filter === "active") {
     return todos.filter((todo) => !todo.completed);
   }
@@ -84,6 +86,7 @@ const allCompleted = computed(
   () => todos.value.length > 0 && numActiveTodos.value === 0
 );
 const mark = computed(() => (!allCompleted.value ? "completed" : "active"));
-const markEvent = computed(() => `MARK.${mark.value}`);
+type MarkEvent = "MARK.completed" | "MARK.active"
+const markEvent = computed(() => `MARK.${mark.value}`) as Ref<MarkEvent>;
 const filteredTodos = computed(() => filterTodos(filter.value, todos.value));
 </script>

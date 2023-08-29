@@ -1,10 +1,11 @@
-import { spawn, ActorRef } from "xstate";
+import { spawn } from "xstate";
 import { nanoid } from "nanoid";
 import { createTodoMachine } from "./todoItem.machine";
 import { createModel } from "xstate/lib/model";
 import { ref } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import type { RemovableRef } from "@vueuse/core";
+import type { Todo } from "./types";
 
 const createTodo = (title: string) => {
   return {
@@ -13,13 +14,6 @@ const createTodo = (title: string) => {
     completed: false,
   };
 };
-
-interface Todo {
-  id: string;
-  title: string;
-  completed: boolean;
-  ref: ActorRef<any>;
-}
 
 const todosModel = createModel(
   {
