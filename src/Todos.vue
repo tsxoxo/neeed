@@ -2,35 +2,15 @@
   <section class="todoapp" :data-state="state.toStrings()">
     <header class="header">
       <h1>Todos</h1>
-      <input
-        class="new-todo"
-        autofocus
-        type="text"
-        placeholder="What needs to be done?"
-        @keypress.enter="
-          send({ type: 'NEWTODO.COMMIT', value: $event.target.value })
-        "
-        @input="(event) => onInput(event)"
-        :value="todo"
-      />
+      <input class="new-todo" autofocus type="text" placeholder="What needs to be done?" @keypress.enter="
+        send({ type: 'NEWTODO.COMMIT', value: ($event.target as HTMLInputElement).value })
+        " @input="send({ type: 'NEWTODO.CHANGE', value: ($event.target as HTMLInputElement).value })" :value="todo" />
     </header>
     <section class="main">
-      <input
-        id="toggle-all"
-        class="toggle-all"
-        type="checkbox"
-        :checked="allCompleted"
-        @change="send(markEvent)"
-      />
-      <label for="toggle-all" :title="`Mark all as ${mark}`"
-        >Mark all as {{ mark }}</label
-      >
+      <input id="toggle-all" class="toggle-all" type="checkbox" :checked="allCompleted" @change="send(markEvent)" />
+      <label for="toggle-all" :title="`Mark all as ${mark}`">Mark all as {{ mark }}</label>
       <ul class="todo-list">
-        <TodoItem
-          v-for="todoItem in filteredTodos"
-          :key="todoItem.id"
-          :todo-ref="todoItem.ref"
-        ></TodoItem>
+        <TodoItem v-for="todoItem in filteredTodos" :key="todoItem.id" :todo-ref="todoItem.ref"></TodoItem>
       </ul>
       <footer class="footer" v-show="todos.length">
         <span class="todo-count">
@@ -41,38 +21,22 @@
         </span>
         <ul class="filters">
           <li>
-            <a
-              href="#/"
-              :class="{
-                selected: filter === 'all',
-              }"
-              >All</a
-            >
+            <a href="#/" :class="{
+              selected: filter === 'all',
+            }">All</a>
           </li>
           <li>
-            <a
-              href="#/active"
-              :class="{
-                selected: filter === 'active',
-              }"
-              >Active</a
-            >
+            <a href="#/active" :class="{
+              selected: filter === 'active',
+            }">Active</a>
           </li>
           <li>
-            <a
-              href="#/completed"
-              :class="{
-                selected: filter === 'completed',
-              }"
-              >Completed</a
-            >
+            <a href="#/completed" :class="{
+              selected: filter === 'completed',
+            }">Completed</a>
           </li>
         </ul>
-        <button
-          v-show="numActiveTodos < todos.length"
-          class="clear-completed"
-          @click="send('CLEAR_COMPLETED')"
-        >
+        <button v-show="numActiveTodos < todos.length" class="clear-completed" @click="send('CLEAR_COMPLETED')">
           Clear completed
         </button>
       </footer>
@@ -90,14 +54,9 @@ import { computed } from "vue";
 import { useHashChange } from "./useHashChange";
 
 inspect({
-  // options
-  // url: 'https://stately.ai/viz?inspect', // (default)
-  iframe: false, // open in new window
+  iframe: false,
 });
 
-function onInput(event) {
-  send({ type: "NEWTODO.CHANGE", value: event.target.value });
-}
 function filterTodos(filter, todos) {
   if (filter === "active") {
     return todos.filter((todo) => !todo.completed);

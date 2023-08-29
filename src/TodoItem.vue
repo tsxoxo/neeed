@@ -1,39 +1,23 @@
 <template>
-  <li
-    class="todo"
-    :class="{
-      editing: state.matches('editing'),
-      completed
-    }"
-    :data-todo-state="completed ? 'completed' : 'active'"
-  >
+  <li class="todo" :class="{
+    editing: state.matches('editing'),
+    completed
+  }" :data-todo-state="completed ? 'completed' : 'active'">
     <div class="view">
-      <input
-        class="toggle"
-        type="checkbox"
-        @change="send('TOGGLE_COMPLETE')"
-        :checked="completed"
-      />
+      <input class="toggle" type="checkbox" @change="send('TOGGLE_COMPLETE')" :checked="completed" />
       <label @dblclick="send('EDIT')">{{ title }}</label>
       <button class="destroy" @click="send('DELETE')"></button>
     </div>
-    <input
-      class="edit"
-      type="text"
-      :value="title"
-      @blur="send('BLUR')"
-      @input="send({ type: 'CHANGE', value: $event.target.value })"
-      @keypress.enter="send('COMMIT')"
-      @keydown.escape="send('CANCEL')"
-      ref="inputRef"
-    />
+    <input class="edit" type="text" :value="title" @blur="send('BLUR')"
+      @input="send({ type: 'CHANGE', value: ($event.target as HTMLInputElement).value })" @keypress.enter="send('COMMIT')"
+      @keydown.escape="send('CANCEL')" ref="inputRef" />
   </li>
 </template>
 
 <script setup lang="ts">
 import { ActorRef } from 'xstate/lib/types';
 import { useActor } from '@xstate/vue';
-import { defineProps, computed, watch, ref, nextTick } from 'vue';
+import { computed, watch, ref, nextTick } from 'vue';
 
 const props = defineProps<{
   todoRef: ActorRef<any>;

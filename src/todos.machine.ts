@@ -132,18 +132,7 @@ export const todosMachine = todosModel.createMachine(
   {
     actions: {
       persist: (context, event) => {
-        console.log("persist");
-
         context.localStorageState.value = [...context.todos];
-        /*  console.log(`persist: ${event.type}`);
-        switch (event) {
-          case "NEWTODO.COMMIT":
-            break;
-          case "TODO.COMMIT":
-            break;
-          case "TODO.DELETE":
-            break; 
-        }*/
       },
     },
   }
