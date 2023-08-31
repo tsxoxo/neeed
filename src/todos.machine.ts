@@ -4,7 +4,6 @@ import { createTodoMachine } from "./todoItem.machine";
 import { createModel } from "xstate/lib/model";
 import { ref } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import type { RemovableRef } from "@vueuse/core";
 import type { Todo } from "./types";
 
 const createTodo = (title: string) => {
@@ -20,7 +19,7 @@ const todosModel = createModel(
     todo: "",
     todos: [] as Todo[],
     filter: "all",
-    localStorageState: ref([]) as RemovableRef<Todo[]>,
+    localStorageState: useLocalStorage("todos", []),
   },
   {
     events: {
@@ -46,8 +45,13 @@ export const todosMachine = todosModel.createMachine(
         entry: todosModel.assign({
           todos: (context) => {
             // "Rehydrate" persisted todos
-            context.localStorageState = useLocalStorage("todos", context.todos);
-            return context.localStorageState.value.map((todo) => ({
+            // why does this not work?
+            // this makes it so that only newly added items get properly updated
+            // and it makes it so that the items loaded from localstorage does not even fire a persist action
+            // so are the actors somehow corrupted? but arent they created anew with {...todo, ref:}?
+            // do i need to kill them?
+            // hmmm, see ref: {listener: Set(0)} for items from localStorage but Set(1) for fresh ones
+            return JSON.parse(localStorage.getItem("todos") || '').map((todo: Todo) => ({
               ...todo,
               ref: spawn(createTodoMachine(todo)),
             }));
@@ -126,7 +130,12 @@ export const todosMachine = todosModel.createMachine(
   {
     actions: {
       persist: (context, event) => {
-        context.localStorageState.value = [...context.todos];
+        console.log("PERSISTS");
+        console.log(context.todos);
+        localStorage.setItem("todos", JSON.stringify(context.todos));
+
+
+        // context.localStorageState.value = context.todos.map(({ id, title, completed }) => ({ id, title, completed }));
       },
     },
   }

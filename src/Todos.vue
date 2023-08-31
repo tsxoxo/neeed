@@ -69,7 +69,7 @@ function filterTodos(filter: string, todos: Todo[]) {
   return todos;
 }
 
-const { state, send } = useMachine(todosMachine, { devTools: true });
+const { state, send } = useMachine(todosMachine, { devTools: false });
 
 const todos = computed(() => state.value.context.todos);
 const todo = computed(() => state.value.context.todo);
