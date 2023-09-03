@@ -49,6 +49,7 @@ import { inspect } from "@xstate/inspect";
 import TodoItem from "./TodoItem.vue";
 import { todosMachine } from "./todos.machine";
 import { useMachine } from "@xstate/vue";
+import { State } from "xstate";
 import { computed } from "vue";
 import type { Todo } from "./types";
 import type { Ref } from 'vue'
@@ -69,7 +70,22 @@ function filterTodos(filter: string, todos: Todo[]) {
   return todos;
 }
 
-const { state, send } = useMachine(todosMachine, { devTools: false });
+const persistedTodos = JSON.parse(localStorage.getItem("todos") || '[]')
+const initContext = {
+  todo: "",
+  todos: persistedTodos as Todo[],
+  filter: "all",
+}
+
+// const restoredState = State.from('ready', initContext)
+// const resolvedState = todosMachine.resolveState(restoredState);
+
+// const { state, send } = useMachine(todosMachine, {
+//   state: resolvedState, devTools: false
+// });
+const { state, send } = useMachine(todosMachine, { context: initContext });
+// console.log(state.value);
+
 
 const todos = computed(() => state.value.context.todos);
 const todo = computed(() => state.value.context.todo);

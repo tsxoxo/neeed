@@ -1,4 +1,4 @@
-import { spawn } from "xstate";
+import { spawn, assign } from "xstate";
 import { nanoid } from "nanoid";
 import { createTodoMachine } from "./todoItem.machine";
 import { createModel } from "xstate/lib/model";
@@ -19,7 +19,6 @@ const todosModel = createModel(
     todo: "",
     todos: [] as Todo[],
     filter: "all",
-    localStorageState: useLocalStorage("todos", []),
   },
   {
     events: {
@@ -42,8 +41,8 @@ export const todosMachine = todosModel.createMachine(
     initial: "loading",
     states: {
       loading: {
-        entry: todosModel.assign({
-          todos: (context) => {
+        entry: assign({
+          todos: (context, _) => {
             // "Rehydrate" persisted todos
             // why does this not work?
             // this makes it so that only newly added items get properly updated
@@ -51,10 +50,17 @@ export const todosMachine = todosModel.createMachine(
             // so are the actors somehow corrupted? but arent they created anew with {...todo, ref:}?
             // do i need to kill them?
             // hmmm, see ref: {listener: Set(0)} for items from localStorage but Set(1) for fresh ones
-            return JSON.parse(localStorage.getItem("todos") || '').map((todo: Todo) => ({
-              ...todo,
-              ref: spawn(createTodoMachine(todo)),
-            }));
+            // 1. shortterm: why doesnt this work, 2. how to debug this -- e.g. see which spawned actors are running, 3. -- how to visualise systems like this`
+            return context.todos.map((todo: Todo) => Object.assign(
+              todo,
+              {
+                ref: spawn(createTodoMachine(todo), nanoid()),
+              }));
+            // return JSON.parse(localStorage.getItem("todos") || '').map((todo: Todo) => Object.assign(
+            //   todo,
+            //   {
+            //     ref: spawn(createTodoMachine(todo), nanoid()),
+            //   }));
           },
         }),
         always: "ready",
@@ -88,6 +94,8 @@ export const todosMachine = todosModel.createMachine(
           todosModel.assign({
             todos: (context, event) =>
               context.todos.map((todo) => {
+                console.log('committing');
+
                 return todo.id === event.todo.id
                   ? { ...todo, ...event.todo, ref: todo.ref }
                   : todo;
