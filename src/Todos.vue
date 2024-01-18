@@ -44,21 +44,15 @@
   </section>
 </template>
 <script setup lang="ts">
-import { inspect } from "@xstate/inspect";
 
 import TodoItem from "./TodoItem.vue";
 import { todosMachine } from "./todos.machine";
 import { useMachine } from "@xstate/vue";
-import { State } from "xstate";
 import { computed } from "vue";
 import type { Todo } from "./types";
 import type { Ref } from 'vue'
 
 import { useHashChange } from "./useHashChange";
-
-inspect({
-  iframe: false,
-});
 
 function filterTodos(filter: string, todos: Todo[]) {
   if (filter === "active") {

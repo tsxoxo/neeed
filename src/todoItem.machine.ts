@@ -1,28 +1,6 @@
-import { sendParent } from 'xstate';
-import { createModel } from 'xstate/lib/model';
+import { sendParent, setup, assign } from 'xstate';
 
-const todoModel = createModel(
-  {
-    id: '',
-    title: '',
-    prevTitle: '',
-    completed: false
-  },
-  {
-    events: {
-      TOGGLE_COMPLETE: () => ({}),
-      DELETE: () => ({}),
-      SET_COMPLETED: () => ({}),
-      SET_ACTIVE: () => ({}),
-      EDIT: () => ({}),
-      CHANGE: (value: string) => ({ value }),
-      COMMIT: () => ({}),
-      BLUR: () => ({}),
-      CANCEL: () => ({})
-    }
-  }
-);
-
+// TODO remove arguments?
 export const createTodoMachine = ({
   id,
   title,
@@ -32,20 +10,55 @@ export const createTodoMachine = ({
   title: string;
   completed: boolean;
 }) => {
-  return todoModel.createMachine(
+  return setup({
+    types: {
+      context: {} as {
+        id: string,
+        title: string,
+        prevTitle: string,
+        completed: boolean
+      },
+      events: {} as
+        | {
+          type: 'TOGGLE_COMPLETE'
+        }
+        | {
+          type: 'DELETE'
+        }
+        | { type: 'SET_COMPLETED' }
+        | {
+          type: 'SET_ACTIVE'
+        }
+        | { type: 'EDIT' }
+        | {
+          type: 'CHANGE',
+          value: string
+        }
+        | { type: 'COMMIT' }
+        | { type: 'BLUR' }
+        | { type: 'CANCEL' }
+    },
+    actions: {
+      commit: sendParent((context) => ({
+        type: 'TODO.COMMIT',
+        todo: context
+      })),
+      focusInput: () => { }
+    }
+  }).createMachine(
     {
       id: 'todo',
       initial: 'reading',
       context: {
-        id,
-        title,
-        prevTitle: title,
-        completed
+        id: '',
+        title: '',
+        prevTitle: '',
+        completed: false
       },
       on: {
         TOGGLE_COMPLETE: {
           actions: [
-            todoModel.assign({ completed: true }),
+            assign({ completed: true }),
             sendParent((context) => ({ type: 'TODO.COMMIT', todo: context }))
           ]
         },
@@ -55,18 +68,18 @@ export const createTodoMachine = ({
         reading: {
           on: {
             SET_COMPLETED: {
-              actions: [todoModel.assign({ completed: true }), 'commit']
+              actions: [assign({ completed: true }), 'commit']
             },
             TOGGLE_COMPLETE: {
               actions: [
-                todoModel.assign({
-                  completed: (context) => !context.completed
+                assign({
+                  completed: !completed
                 }),
                 'commit'
               ]
             },
             SET_ACTIVE: {
-              actions: [todoModel.assign({ completed: false }), 'commit']
+              actions: [assign({ completed: false }), 'commit']
             },
             EDIT: {
               target: 'editing',
@@ -75,11 +88,11 @@ export const createTodoMachine = ({
           }
         },
         editing: {
-          entry: todoModel.assign({ prevTitle: (context) => context.title }),
+          entry: assign({ prevTitle: title }),
           on: {
             CHANGE: {
-              actions: todoModel.assign({
-                title: (_, event) => event.value
+              actions: assign({
+                title: ({ event }) => event.value
               })
             },
             COMMIT: [
@@ -89,7 +102,7 @@ export const createTodoMachine = ({
                   type: 'TODO.COMMIT',
                   todo: context
                 })),
-                cond: (context) => context.title.trim().length > 0
+                guard: ({ context }) => context.title.trim().length > 0
               },
               { target: 'deleted' }
             ],
@@ -102,28 +115,19 @@ export const createTodoMachine = ({
             },
             CANCEL: {
               target: 'reading',
-              actions: todoModel.assign({
-                title: (context) => context.prevTitle
+              actions: assign({
+                title: ({ context }) => context.prevTitle
               })
             }
           }
         },
         deleted: {
-          entry: sendParent((context) => ({
+          entry: sendParent(({ context }) => ({
             type: 'TODO.DELETE',
             id: context.id
           }))
         }
       }
     },
-    {
-      actions: {
-        commit: sendParent((context) => ({
-          type: 'TODO.COMMIT',
-          todo: context
-        })),
-        focusInput: () => {}
-      }
-    }
   );
 };
