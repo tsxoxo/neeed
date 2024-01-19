@@ -68,12 +68,6 @@ function filterTodos(filter: string, todos: Todo[]) {
 
 const persistedTodos: Todo[] = JSON.parse(localStorage.getItem("todos") || '[]')
 
-// const restoredState = State.from('ready', initContext)
-// const resolvedState = todosMachine.resolveState(restoredState);
-
-// const { state, send } = useMachine(todosMachine, {
-//   state: resolvedState, devTools: false
-// });
 const { snapshot, send } = useMachine(todosMachine, {
   input: {
     persistedTodos
