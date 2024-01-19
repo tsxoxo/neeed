@@ -1,6 +1,6 @@
 <template>
   <li class="todo" :class="{
-    editing: state.matches('editing'),
+    editing: snapshot.matches('editing'),
     completed
   }" :data-todo-state="completed ? 'completed' : 'active'">
     <div class="view">
@@ -23,14 +23,14 @@ const props = defineProps<{
   todoRef: ActorRef<any, any>;
 }>();
 
-const { state, send } = useActor(props.todoRef);
-console.log(JSON.stringify(state.value));
+const { snapshot, send } = useActor(props.todoRef);
+console.log(JSON.stringify(snapshot.value));
 
 const inputRef = ref(null);
 
 // not sure what this does
 // watch(
-//   () => state.value.actions,
+//   () => snapshot.value.actions,
 //   async (actions) => {
 //     if (actions.find((action) => action.type === 'focusInput')) {
 //       if (inputRef.value) {
@@ -41,6 +41,6 @@ const inputRef = ref(null);
 //   }
 // );
 
-const title = computed(() => state.value.context.title);
-const completed = computed(() => state.value.context.completed);
+const title = computed(() => snapshot.value.context.title);
+const completed = computed(() => snapshot.value.context.completed);
 </script>

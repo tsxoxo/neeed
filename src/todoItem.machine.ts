@@ -19,24 +19,15 @@ export const createTodoMachine = ({
         completed: boolean
       },
       events: {} as
-        {
-          type: 'TOGGLE_COMPLETE'
-        }
-        | {
-          type: 'DELETE'
-        }
-        | { type: 'SET_COMPLETED' }
-        | {
-          type: 'SET_ACTIVE'
-        }
-        | { type: 'EDIT' }
-        | {
-          type: 'CHANGE',
-          value: string
-        }
-        | { type: 'COMMIT' }
-        | { type: 'BLUR' }
-        | { type: 'CANCEL' }
+        | { type: "TOGGLE_COMPLETE" }
+        | { type: "DELETE" }
+        | { type: "SET_COMPLETED" }
+        | { type: "SET_ACTIVE" }
+        | { type: "EDIT" }
+        | { type: "CHANGE", value: string }
+        | { type: "COMMIT" }
+        | { type: "BLUR" }
+        | { type: "CANCEL" }
     },
     actions: {
       commit: sendParent((context) => ({

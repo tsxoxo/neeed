@@ -79,14 +79,12 @@ const { snapshot, send } = useMachine(todosMachine, {
     todos: persistedTodos
   }
 });
-// console.log(state.value);
-
 
 const todos = computed(() => snapshot.value.context.todos);
 const todo = computed(() => snapshot.value.context.todo);
 const filter = computed(() => snapshot.value.context.filter);
 
-// TODO WHere do we set window.location.has? How is filtering implemented?
+// TODO Where do we set window.location.hash?
 useHashChange(() =>
   send({ type: "SHOW", filter: window.location.hash.slice(2) as Filters || "all" })
 );
