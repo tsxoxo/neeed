@@ -4,5 +4,5 @@ export interface Todo {
     id: string;
     title: string;
     completed: boolean;
-    ref: ActorRef<any>;
+    ref: ActorRef<any, any>;
 }

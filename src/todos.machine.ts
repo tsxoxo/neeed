@@ -1,7 +1,6 @@
-import { spawn, assign } from "xstate";
+import { assign, setup } from "xstate";
 import { nanoid } from "nanoid";
 import { createTodoMachine } from "./todoItem.machine";
-import { createModel } from "xstate/lib/model";
 import { ref } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import type { Todo } from "./types";
@@ -14,47 +13,68 @@ const createTodo = (title: string) => {
   };
 };
 
-const todosModel = createModel(
-  {
-    todo: "",
-    todos: [] as Todo[],
-    filter: "all",
-  },
-  {
-    events: {
-      "NEWTODO.CHANGE": (value: string) => ({ value }),
-      "NEWTODO.COMMIT": (value: string) => ({ value }),
-      "TODO.COMMIT": (todo: Todo) => ({ todo }),
-      "TODO.DELETE": (id: string) => ({ id }),
-      SHOW: (filter: string) => ({ filter }),
-      "MARK.completed": () => ({}),
-      "MARK.active": () => ({}),
-      CLEAR_COMPLETED: () => ({}),
-    },
-  }
-);
+// const todosModel = createModel(
+//   {
+//     todo: "",
+//     todos: [] as Todo[],
+//     filter: "all",
+//   },
+//   {
+//     events: {
+//       "NEWTODO.CHANGE": (value: string) => ({ value }),
+//       "NEWTODO.COMMIT": (value: string) => ({ value }),
+//       "TODO.COMMIT": (todo: Todo) => ({ todo }),
+//       "TODO.DELETE": (id: string) => ({ id }),
+//       SHOW: (filter: string) => ({ filter }),
+//       "MARK.completed": () => ({}),
+//       "MARK.active": () => ({}),
+//       CLEAR_COMPLETED: () => ({}),
+//     },
+//   }
+// );
 
-export const todosMachine = todosModel.createMachine(
+type Filters = "all" | "active" | "completed";
+
+export const todosMachine = setup({
+  types: {
+    context: {} as {
+      todo: string,
+      todos: Todo[],
+      filter: Filters
+    },
+    events: {} as
+      | { type: "NEWTODO.CHANGE", value: string }
+      | { type: "NEWTODO.COMMIT", value: string }
+      | { type: "TODO.COMMIT", todo: Todo }
+      | { type: "TODO.DELETE", id: string }
+      | { type: "SHOW", filter: Filters }
+      | { type: "MARK.completed" }
+      | { type: "MARK.active" }
+      | { type: "CLEAR_COMPLETED" }
+  },
+  actions: {
+    persist: ({ context, event }) => {
+      localStorage.setItem("todos", JSON.stringify(context.todos));
+      // context.localStorageState.value = context.todos.map(({ id, title, completed }) => ({ id, title, completed }));
+    },
+  },
+}).createMachine(
   {
     id: "todos",
-    context: todosModel.initialContext,
+    context: {
+      todo: "",
+      todos: [] as Todo[],
+      filter: "all",
+    },
     initial: "loading",
     states: {
       loading: {
         entry: assign({
-          todos: (context, _) => {
-            // "Rehydrate" persisted todos
-            // why does this not work?
-            // this makes it so that only newly added items get properly updated
-            // and it makes it so that the items loaded from localstorage does not even fire a persist action
-            // so are the actors somehow corrupted? but arent they created anew with {...todo, ref:}?
-            // do i need to kill them?
-            // hmmm, see ref: {listener: Set(0)} for items from localStorage but Set(1) for fresh ones
-            // 1. shortterm: why doesnt this work, 2. how to debug this -- e.g. see which spawned actors are running, 3. -- how to visualise systems like this`
+          todos: ({ context, spawn }) => {
             return context.todos.map((todo: Todo) => Object.assign(
               todo,
               {
-                ref: spawn(createTodoMachine(todo), nanoid()),
+                ref: spawn(createTodoMachine(todo), { id: nanoid() }),
               }));
             // return JSON.parse(localStorage.getItem("todos") || '').map((todo: Todo) => Object.assign(
             //   todo,
@@ -69,15 +89,15 @@ export const todosMachine = todosModel.createMachine(
     },
     on: {
       "NEWTODO.CHANGE": {
-        actions: todosModel.assign({
-          todo: (_, event) => event.value,
+        actions: assign({
+          todo: ({ event }) => event.value,
         }),
       },
       "NEWTODO.COMMIT": {
         actions: [
-          todosModel.assign({
+          assign({
             todo: "", // clear todo
-            todos: (context, event) => {
+            todos: ({ context, event, spawn }) => {
               const newTodo = createTodo(event.value.trim());
               return context.todos.concat({
                 ...newTodo,
@@ -87,13 +107,13 @@ export const todosMachine = todosModel.createMachine(
           }),
           "persist",
         ],
-        cond: (_, event) => !!event.value.trim().length,
+        guard: ({ event }) => !!event.value.trim().length,
       },
       "TODO.COMMIT": {
         actions: [
-          todosModel.assign({
-            todos: (context, event) =>
-              context.todos.map((todo) => {
+          assign({
+            todos: ({ context, event }) =>
+              context.todos.map((todo: Todo) => {
                 console.log('committing');
 
                 return todo.id === event.todo.id
@@ -106,45 +126,33 @@ export const todosMachine = todosModel.createMachine(
       },
       "TODO.DELETE": {
         actions: [
-          todosModel.assign({
-            todos: (context, event) =>
-              context.todos.filter((todo) => todo.id !== event.id),
+          assign({
+            todos: ({ context, event }) =>
+              context.todos.filter((todo: Todo) => todo.id !== event.id),
           }),
           "persist",
         ],
       },
       SHOW: {
-        actions: todosModel.assign({
-          filter: (_, event) => event.filter,
+        actions: assign({
+          filter: ({ event }) => event.filter,
         }),
       },
       "MARK.completed": {
-        actions: (context) => {
-          context.todos.forEach((todo) => todo.ref.send("SET_COMPLETED"));
+        actions: ({ context }) => {
+          context.todos.forEach((todo: Todo) => todo.ref.send("SET_COMPLETED"));
         },
       },
       "MARK.active": {
-        actions: (context) => {
-          context.todos.forEach((todo) => todo.ref.send("SET_ACTIVE"));
+        actions: ({ context }) => {
+          context.todos.forEach((todo: Todo) => todo.ref.send("SET_ACTIVE"));
         },
       },
       CLEAR_COMPLETED: {
-        actions: todosModel.assign({
-          todos: (context) => context.todos.filter((todo) => !todo.completed),
+        actions: assign({
+          todos: ({ context }) => context.todos.filter((todo: Todo) => !todo.completed),
         }),
       },
     },
   },
-  {
-    actions: {
-      persist: (context, event) => {
-        console.log("PERSISTS");
-        console.log(context.todos);
-        localStorage.setItem("todos", JSON.stringify(context.todos));
-
-
-        // context.localStorageState.value = context.todos.map(({ id, title, completed }) => ({ id, title, completed }));
-      },
-    },
-  }
 );
