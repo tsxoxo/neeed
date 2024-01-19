@@ -50,7 +50,8 @@ export const todosMachine = setup({
       | { type: "SHOW", filter: Filters }
       | { type: "MARK.completed" }
       | { type: "MARK.active" }
-      | { type: "CLEAR_COMPLETED" }
+      | { type: "CLEAR_COMPLETED" },
+    input: {} as { persistedTodos: Todo[] }
   },
   actions: {
     persist: ({ context, event }) => {

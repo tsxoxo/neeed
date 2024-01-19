@@ -76,7 +76,7 @@ const persistedTodos: Todo[] = JSON.parse(localStorage.getItem("todos") || '[]')
 // });
 const { snapshot, send } = useMachine(todosMachine, {
   input: {
-    todos: persistedTodos
+    persistedTodos
   }
 });
 

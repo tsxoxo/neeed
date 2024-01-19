@@ -24,7 +24,6 @@ const props = defineProps<{
 }>();
 
 const { snapshot, send } = useActor(props.todoRef);
-console.log(JSON.stringify(snapshot.value));
 
 const inputRef = ref(null);
 
