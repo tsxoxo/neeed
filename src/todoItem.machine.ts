@@ -19,7 +19,7 @@ export const createTodoMachine = ({
         completed: boolean
       },
       events: {} as
-        | {
+        {
           type: 'TOGGLE_COMPLETE'
         }
         | {

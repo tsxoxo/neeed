@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { createTodoMachine } from "./todoItem.machine";
 import { ref } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import type { Todo } from "./types";
+import type { Todo, Filters } from "./types";
 
 const createTodo = (title: string) => {
   return {
@@ -33,7 +33,7 @@ const createTodo = (title: string) => {
 //   }
 // );
 
-type Filters = "all" | "active" | "completed";
+interface Input { todos: Todo[] }
 
 export const todosMachine = setup({
   types: {
@@ -61,11 +61,11 @@ export const todosMachine = setup({
 }).createMachine(
   {
     id: "todos",
-    context: {
+    context: ({ input }) => ({
       todo: "",
-      todos: [] as Todo[],
+      todos: input.persistedTodos,
       filter: "all",
-    },
+    }),
     initial: "loading",
     states: {
       loading: {

@@ -6,3 +6,5 @@ export interface Todo {
     completed: boolean;
     ref: ActorRef<any, any>;
 }
+
+export type Filters = "all" | "active" | "completed";

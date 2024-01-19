@@ -1,6 +1,6 @@
 import { onMounted, onUnmounted } from 'vue';
 
-export function useHashChange(onHashChange) {
+export function useHashChange(onHashChange: () => void) {
   onMounted(() => {
     window.addEventListener('hashchange', onHashChange);
   });

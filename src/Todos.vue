@@ -1,5 +1,6 @@
 <template>
-  <section class="todoapp" :data-state="state.toStrings()">
+  <!-- TODO not sure how to refactor :data-state="state.toStrings()" in the section tag-->
+  <section class="todoapp">
     <header class="header">
       <h1>Todos</h1>
       <input class="new-todo" autofocus type="text" placeholder="What needs to be done?" @keypress.enter="
@@ -7,7 +8,8 @@
         " @input="send({ type: 'NEWTODO.CHANGE', value: ($event.target as HTMLInputElement).value })" :value="todo" />
     </header>
     <section class="main">
-      <input id="toggle-all" class="toggle-all" type="checkbox" :checked="allCompleted" @change="send(markEvent)" />
+      <input id="toggle-all" class="toggle-all" type="checkbox" :checked="allCompleted"
+        @change="send({ type: markEvent })" />
       <label for="toggle-all" :title="`Mark all as ${mark}`">Mark all as {{ mark }}</label>
       <ul class="todo-list">
         <TodoItem v-for="todoItem in filteredTodos" :key="todoItem.id" :todo-ref="todoItem.ref"></TodoItem>
@@ -36,7 +38,7 @@
             }">Completed</a>
           </li>
         </ul>
-        <button v-show="numActiveTodos < todos.length" class="clear-completed" @click="send('CLEAR_COMPLETED')">
+        <button v-show="numActiveTodos < todos.length" class="clear-completed" @click="send({ type: 'CLEAR_COMPLETED' })">
           Clear completed
         </button>
       </footer>
@@ -49,7 +51,7 @@ import TodoItem from "./TodoItem.vue";
 import { todosMachine } from "./todos.machine";
 import { useMachine } from "@xstate/vue";
 import { computed } from "vue";
-import type { Todo } from "./types";
+import type { Todo, Filters } from "./types";
 import type { Ref } from 'vue'
 
 import { useHashChange } from "./useHashChange";
@@ -64,12 +66,7 @@ function filterTodos(filter: string, todos: Todo[]) {
   return todos;
 }
 
-const persistedTodos = JSON.parse(localStorage.getItem("todos") || '[]')
-const initContext = {
-  todo: "",
-  todos: persistedTodos as Todo[],
-  filter: "all",
-}
+const persistedTodos: Todo[] = JSON.parse(localStorage.getItem("todos") || '[]')
 
 // const restoredState = State.from('ready', initContext)
 // const resolvedState = todosMachine.resolveState(restoredState);
@@ -77,16 +74,21 @@ const initContext = {
 // const { state, send } = useMachine(todosMachine, {
 //   state: resolvedState, devTools: false
 // });
-const { state, send } = useMachine(todosMachine, { context: initContext });
+const { snapshot, send } = useMachine(todosMachine, {
+  input: {
+    todos: persistedTodos
+  }
+});
 // console.log(state.value);
 
 
-const todos = computed(() => state.value.context.todos);
-const todo = computed(() => state.value.context.todo);
-const filter = computed(() => state.value.context.filter);
+const todos = computed(() => snapshot.value.context.todos);
+const todo = computed(() => snapshot.value.context.todo);
+const filter = computed(() => snapshot.value.context.filter);
 
+// TODO WHere do we set window.location.has? How is filtering implemented?
 useHashChange(() =>
-  send({ type: "SHOW", filter: window.location.hash.slice(2) || "all" })
+  send({ type: "SHOW", filter: window.location.hash.slice(2) as Filters || "all" })
 );
 
 const numActiveTodos = computed(
