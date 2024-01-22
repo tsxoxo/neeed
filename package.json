@@ -6,6 +6,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@statelyai/inspect": "^0.2.0",
     "@vueuse/core": "^10.7.2",
     "@xstate/vue": "^3.0.3",
     "nanoid": "^5.0.4",
