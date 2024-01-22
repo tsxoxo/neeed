@@ -72,10 +72,15 @@ export const todosMachine = setup({
       loading: {
         entry: assign({
           todos: ({ context, spawn }) => {
+            // console.log('CONTEXT\n', context);
+            console.log('spawning...');
+            console.log('todos: ', context.todos);
+            console.log('context: ', context);
+
             return context.todos.map((todo: Todo) => Object.assign(
               todo,
               {
-                ref: spawn(createTodoMachine(todo), { id: nanoid() }),
+                ref: spawn(createTodoMachine(todo), { id: nanoid(), input: todo }),
               }));
             // return JSON.parse(localStorage.getItem("todos") || '').map((todo: Todo) => Object.assign(
             //   todo,

@@ -40,12 +40,12 @@ export const createTodoMachine = ({
     {
       id: 'todo',
       initial: 'reading',
-      context: {
+      context: ({ input }) => ({
         id: '',
         title: '',
         prevTitle: '',
         completed: false
-      },
+      }),
       on: {
         TOGGLE_COMPLETE: {
           actions: [
@@ -53,7 +53,7 @@ export const createTodoMachine = ({
             sendParent((context) => ({ type: 'TODO.COMMIT', todo: context }))
           ]
         },
-        DELETE: 'deleted'
+        DELETE: '.deleted'
       },
       states: {
         reading: {

@@ -1,10 +1,10 @@
 <template>
   <li class="todo" :class="{
-    editing: snapshot.matches('editing'),
+    editing: todoRef.getSnapshot().matches('editing'),
     completed
   }" :data-todo-state="completed ? 'completed' : 'active'">
     <div class="view">
-      <input class="toggle" type="checkbox" @change="send({ type: 'TOGGLE_COMPLETE' })" :checked="completed" />
+      <input class="toggle" type="checkbox" @change="send({ type: 'TOGGLE_COMPLETE' })" :checked="completed.value" />
       <label @dblclick="send({ type: 'EDIT' })">{{ title }}</label>
       <button class="destroy" @click="send({ type: 'DELETE' })"></button>
     </div>
@@ -15,17 +15,25 @@
 </template>
 
 <script setup lang="ts">
-import { ActorRef } from 'xstate';
-import { useActor } from '@xstate/vue';
+import { ActorRef, ActorRefFrom } from 'xstate';
+import { useActor, useSelector } from '@xstate/vue';
 import { computed, watch, ref, nextTick } from 'vue';
+import { createTodoMachine } from "./todoItem.machine";
 
 const props = defineProps<{
-  todoRef: ActorRef<any, any>;
+  todoRef: ActorRefFrom<typeof createTodoMachine>
 }>();
+// const props = defineProps<{
+//   todoRef: ActorRef<any, any>;
+// }>();
 
-const { snapshot, send } = useActor(props.todoRef);
+// const { snapshot, send } = useActor(props.todoRef);
 
+const todoRef = props.todoRef
+const { send } = todoRef
 const inputRef = ref(null);
+
+// console.log(props.todoRef.getSnapshot());
 
 // not sure what this does
 // watch(
@@ -40,6 +48,8 @@ const inputRef = ref(null);
 //   }
 // );
 
-const title = computed(() => snapshot.value.context.title);
-const completed = computed(() => snapshot.value.context.completed);
+const title = computed(() => useSelector(todoRef, (snapshot) => snapshot.context.title))
+const completed = computed(() => useSelector(todoRef, (snapshot) => snapshot.context.completed))
+// snapshot.value.context.title);
+// const completed = computed(() => snapshot.value.context.completed);
 </script>

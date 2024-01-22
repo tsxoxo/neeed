@@ -56,6 +56,10 @@ import type { Ref } from 'vue'
 
 import { useHashChange } from "./useHashChange";
 
+import { createBrowserInspector } from '@statelyai/inspect';
+
+const { inspect } = createBrowserInspector();
+
 function filterTodos(filter: string, todos: Todo[]) {
   if (filter === "active") {
     return todos.filter((todo) => !todo.completed);
@@ -71,12 +75,21 @@ const persistedTodos: Todo[] = JSON.parse(localStorage.getItem("todos") || '[]')
 const { snapshot, send } = useMachine(todosMachine, {
   input: {
     persistedTodos
+  }, inspect: (inspectionEvent) => {
+    // type: '@xstate.actor' or
+    // type: '@xstate.snapshot' or
+    // type: '@xstate.event'
+    console.log(inspectionEvent);
   }
 });
+// console.log(persistedTodos);
 
-const todos = computed(() => snapshot.value.context.todos);
-const todo = computed(() => snapshot.value.context.todo);
-const filter = computed(() => snapshot.value.context.filter);
+// console.log(snapshot.value);
+
+
+const todos = computed(() => snapshot.value.context?.todos);
+const todo = computed(() => snapshot.value.context?.todo);
+const filter = computed(() => snapshot.value.context?.filter);
 
 // TODO Where do we set window.location.hash?
 useHashChange(() =>
